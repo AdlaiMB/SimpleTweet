@@ -84,7 +84,7 @@ public class TimeLineActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.compose){
 
             // Compose icon is tapped/clicked
-            Toast.makeText(this,"Compose",Toast.LENGTH_SHORT).show();
+            setContentView(R.layout.activity_compose);
             // Navigate to the compose activity
             return true;
         }

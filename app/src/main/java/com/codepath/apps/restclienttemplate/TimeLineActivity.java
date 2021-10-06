@@ -1,11 +1,17 @@
 package com.codepath.apps.restclienttemplate;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultCaller;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +25,7 @@ import com.github.scribejava.apis.TwitterApi;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +41,7 @@ public class TimeLineActivity extends AppCompatActivity {
     List<Tweet> tweets;
     TweetsAdapter adapter;
     SwipeRefreshLayout swipeContainer;
+    ActivityResultLauncher<Intent> someActivityLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +50,26 @@ public class TimeLineActivity extends AppCompatActivity {
 
         client = TwitterApp.getRestClient(this);
         swipeContainer = findViewById(R.id.swipeContainer);
+
+        // Set up a function to get back the data from the intent
+         someActivityLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        if (result.getResultCode() == Activity.RESULT_OK){
+                            // Get data from the intent (Tweet)
+                            Tweet tweet = Parcels.unwrap(result.getData().getParcelableExtra("tweet"));
+                            // Update the recycler view with the tweet
+                            // Modify the source of tweets
+                            tweets.add(0,tweet);
+                            //Notify the Adapter
+                            adapter.notifyItemInserted(0);
+                            rvTweets.smoothScrollToPosition(0);
+                        }
+                    }
+                }
+        );
 
         // configure the refreshing color
         swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
@@ -86,7 +114,7 @@ public class TimeLineActivity extends AppCompatActivity {
 
             // Navigate to the compose activity
             Intent intent = new Intent(this, ComposeActivity.class);
-            startActivity(intent);
+            someActivityLauncher.launch(intent);
 
             return true;
         }
